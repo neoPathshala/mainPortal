@@ -1,0 +1,11 @@
+'use client';
+import {useId,useRef,useState} from 'react';
+import {Check} from 'lucide-react';
+
+export function PlaybackSpeedMenu({value,rates,onChange,disabled=false}:{value:number;rates:number[];onChange:(value:number)=>void;disabled?:boolean}){
+ const id=useId();const panel=useRef<HTMLDivElement>(null);const trigger=useRef<HTMLButtonElement>(null);
+ const [position,setPosition]=useState({bottom:0,left:0,maxHeight:300});
+ function place(){const button=trigger.current;const rect=button?.getBoundingClientRect();if(!rect)return;const track=button?.closest('[aria-label$="video player"]')?.querySelector('input[aria-label="Video position"]')?.getBoundingClientRect();const anchor=track?.top??rect.top;setPosition({left:Math.max(8,Math.min(rect.left+rect.width/2-56,window.innerWidth-120)),bottom:window.innerHeight-anchor+10,maxHeight:Math.max(40,Math.min(300,anchor-18))});}
+ function choose(speed:number){onChange(speed);panel.current?.hidePopover();trigger.current?.focus();}
+ return <div className="ml-3 shrink-0"><button ref={trigger} type="button" disabled={disabled} popoverTarget={id} onClick={place} aria-label={`Playback speed ${value}×`} className="inline-flex h-8 min-w-10 rounded-lg items-center justify-center px-2 text-sm font-medium hover:bg-muted disabled:opacity-35">{value}×</button><div ref={panel} id={id} popover="auto" aria-label="Playback speed" className="fixed m-0 top-auto w-28 overflow-y-auto rounded-lg border border-border bg-popover py-2 text-popover-foreground shadow-lg" style={position} onKeyDown={event=>{if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();const buttons=Array.from(panel.current?.querySelectorAll<HTMLButtonElement>('button')||[]);const index=buttons.indexOf(document.activeElement as HTMLButtonElement);buttons[(index+(event.key==='ArrowDown'?1:-1)+buttons.length)%buttons.length]?.focus();}}}><div role="group" aria-label="Speed options" className="py-0.5">{[...new Set([...rates,value])].sort((a,b)=>a-b).map(speed=><button key={speed} type="button" aria-pressed={speed===value} onClick={()=>choose(speed)} className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs hover:bg-muted focus-visible:bg-muted"><span className="w-4">{speed===value&&<Check size={15}/>}</span><span>{speed===1?'Normal':`${speed}×`}</span></button>)}</div></div></div>;
+}

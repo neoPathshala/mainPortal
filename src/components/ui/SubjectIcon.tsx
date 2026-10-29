@@ -1,0 +1,4 @@
+import {Atom,Binary,BookOpen,Boxes,BrainCircuit,Calculator,Code2,Cpu,Database,FileText,FlaskConical,GitBranch,Globe,Languages,Monitor,Network,Shield,ShoppingBag,Terminal,Workflow} from 'lucide-react';
+import {subjectIconName,legacySubjectIconName} from '@/lib/subject-icon';
+const icons={chemistry:FlaskConical,physics:Atom,security:Shield,database:Database,ai:BrainCircuit,business:ShoppingBag,network:Network,math:Calculator,algorithms:GitBranch,hardware:Cpu,logic:Binary,theory:Boxes,system:Terminal,project:Workflow,technology:Monitor,web:Globe,programming:Code2,language:Languages,book:BookOpen};
+export function SubjectIcon({name,className='h-4 w-4',strokeWidth=1.75,topic=false}:{name:string;className?:string;strokeWidth?:number;topic?:boolean}){const key=topic?subjectIconName(name||''):legacySubjectIconName(name||'');const Icon=!topic&&key==='project'?FileText:icons[key];return <Icon aria-hidden="true" className={className} strokeWidth={strokeWidth}/>;}

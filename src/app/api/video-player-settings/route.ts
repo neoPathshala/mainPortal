@@ -1,0 +1,2 @@
+import {readSitePresentation} from '@/lib/site-presentation.server';
+export async function GET(){const {settings}=await readSitePresentation();return Response.json({showYouTubeButton:settings.study.showYouTubeButton!==false,showVideoQualityButton:settings.study.showVideoQualityButton!==false,showVideoLessonLabels:settings.study.showVideoLessonLabels!==false},{headers:{'Cache-Control':'no-store'}});}

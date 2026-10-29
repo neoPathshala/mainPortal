@@ -1,0 +1,454 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["neo"]
+}
+
+enum ResourceType {
+  books
+  notes
+  papers
+  practical
+  questions
+  syllabus
+  videos
+  viva
+
+  @@schema("neo")
+}
+
+enum UserRole {
+  STUDENT
+  ADMIN
+  SUPERADMIN
+  TEACHER
+  CONTENT_MANAGER
+
+  @@schema("neo")
+}
+
+model User {
+  id                 String               @id @default(cuid())
+  name               String
+  email              String
+  role               UserRole             @default(STUDENT)
+  status             String               @default("Pending")
+  semester           Int?
+  site               String               @default("neopathshala")
+  avatarUrl          String?
+  phone              String?
+  jobTitle           String?              @default("Student")
+  emergencyLockdown  Boolean              @default(false)
+  college            String?
+  studentId          String?
+  bio                String?
+  lastLoginAt        DateTime?
+  devicePolicy       String               @default("1_web_1_app")
+  enrollments        StudentEnrollment[]
+  electiveSelections StudentElective[]
+  academicSessions   AcademicSession[]
+  auditLogs          SuperAdminAuditLog[]
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  @@unique([email, site])
+
+  @@schema("neo")
+}
+
+model SuperAdminAuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  details   String
+  severity  String   @default("info")
+  ipAddress String   @default("Not collected")
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@schema("neo")
+}
+
+model Semester {
+  id       Int       @id @default(autoincrement())
+  name     String
+  subjects Subject[]
+
+  @@schema("neo")
+}
+
+model Subject {
+  id                 String            @id @default(cuid())
+  name               String
+  slug               String            @unique
+  description        String?
+  isElective         Boolean           @default(false)
+  electiveGroup      String?
+  semesterId         Int?
+  semester           Semester?         @relation(fields: [semesterId], references: [id], onDelete: Cascade)
+  resources          Resource[]
+  courseId           String
+  course             Course            @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  code               String            @default("")
+  creditHours        Int               @default(3)
+  lectureHours       Int               @default(0)
+  status             ContentStatus     @default(DRAFT)
+  units              Unit[]
+  questions          Question[]
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  electiveSelections StudentElective[]
+
+  @@index([courseId, semesterId, status])
+
+  @@schema("neo")
+}
+
+model Resource {
+  unitId    String?
+  unit      Unit? @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  id        String        @id @default(cuid())
+  title     String
+  url       String
+  type      ResourceType
+  author    String?
+  subjectId String
+  subject   Subject       @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  status    ContentStatus @default(DRAFT)
+  updatedAt DateTime      @updatedAt
+  createdAt DateTime      @default(now())
+
+  @@index([unitId])
+  @@index([subjectId, status, type])
+
+  @@schema("neo")
+}
+
+model SiteConfig {
+  id                String  @id @default(cuid())
+  site              String  @unique
+  siteName          String
+  maintenanceMode   Boolean @default(false)
+  allowRegistration Boolean @default(true)
+  announcement      String?
+  logoUrl           String? @default("/logo.png")
+  domainUrl         String?
+
+  @@schema("neo")
+}
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+  SCHEDULED
+  ARCHIVED
+
+  @@schema("neo")
+}
+
+model Article {
+  id              String        @id @default(cuid())
+  title           String
+  slug            String        @unique
+  excerpt         String?
+  content         String        @db.Text
+  coverImage      String?
+  category        String        @default("Guides")
+  tags            String[]      @default([])
+  author          String        @default("Aashish Adhikari")
+  authorAvatar    String?
+  status          ArticleStatus @default(DRAFT)
+  site            String        @default("all") // "all", "neopathshala", "entrance"
+  isFeatured      Boolean       @default(false)
+  views           Int           @default(0)
+  likes           Int           @default(0)
+  readTime        Int           @default(3)
+  metaTitle       String?
+  metaDescription String?
+  canonicalUrl    String?
+  publishedAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@schema("neo")
+}
+
+// Academic portal credentials are separate from administrative sessions.
+model AcademicSession {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String   @unique
+  device     String
+  createdAt  DateTime @default(now())
+  lastActive DateTime @default(now())
+  expiresAt  DateTime
+
+  @@index([userId])
+  @@index([expiresAt])
+
+  @@schema("neo")
+}
+
+model AcademicOtp {
+  email         String   @id
+  purpose       String
+  codeHash      String
+  challengeHash String
+  attempts      Int      @default(0)
+  expiresAt     DateTime
+  name          String
+  phone         String   @default("")
+  course        String   @default("")
+
+  @@schema("neo")
+}
+
+model AcademicRateLimit {
+  key       String   @id
+  count     Int      @default(1)
+  expiresAt DateTime
+
+  @@index([expiresAt])
+
+  @@schema("neo")
+}
+
+// Private serverless-safe uploads and records.
+model PlatformObject {
+  key       String   @id
+  body      Bytes
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@schema("neo")
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+
+  @@schema("neo")
+}
+
+enum AdminRole {
+  OWNER
+  EDITOR
+  SUPPORT
+
+  @@schema("neo")
+}
+
+model University {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  shortName String
+  courses   Course[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@schema("neo")
+}
+
+model Course {
+  id             String              @id @default(cuid())
+  slug           String              @unique
+  name           String
+  shortName      String
+  description    String              @default("")
+  faculty        String              @default("")
+  totalSemesters Int                 @default(8)
+  totalCredits   Int                 @default(0)
+  universityId   String
+  university     University          @relation(fields: [universityId], references: [id], onDelete: Restrict)
+  status         ContentStatus       @default(DRAFT)
+  subjects       Subject[]
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  enrollments    StudentEnrollment[]
+
+  @@index([universityId, status])
+
+  @@schema("neo")
+}
+
+model Unit {
+  resources Resource[]
+  id        String        @id @default(cuid())
+  subjectId String
+  subject   Subject       @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  number    Int
+  title     String
+  hours     Int           @default(0)
+  topics    String[]      @default([])
+  status    ContentStatus @default(DRAFT)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@unique([subjectId, number])
+
+  @@schema("neo")
+}
+
+model Question {
+  id        String        @id @default(cuid())
+  subjectId String
+  subject   Subject       @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  title     String
+  answer    String        @default("") @db.Text
+  year      Int?
+  marks     Int           @default(0)
+  status    ContentStatus @default(DRAFT)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([subjectId, status, year])
+
+  @@schema("neo")
+}
+
+model Notice {
+  id              String        @id @default(cuid())
+  title           String
+  content         String        @db.Text
+  category        String        @default("General")
+  targetSemesters Int[]         @default([])
+  status          ContentStatus @default(DRAFT)
+  isPinned        Boolean       @default(false)
+  showInTicker    Boolean       @default(false)
+  externalLink    String?
+  publishedAt     DateTime?
+  expiresAt       DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([status, publishedAt])
+
+  @@schema("neo")
+}
+
+model AdminAccount {
+  id                  String          @id @default(cuid())
+  email               String          @unique
+  name                String
+  passwordHash        String
+  totpSecretEncrypted String
+  lastTotpStep        Int             @default(0)
+  role                AdminRole       @default(EDITOR)
+  active              Boolean         @default(true)
+  failedAttempts      Int             @default(0)
+  lockedUntil         DateTime?
+  sessions            AdminSession[]
+  auditLogs           AdminAuditLog[]
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  @@schema("neo")
+}
+
+model AdminSession {
+  id         String       @id @default(cuid())
+  adminId    String
+  admin      AdminAccount @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  tokenHash  String       @unique
+  expiresAt  DateTime
+  lastActive DateTime     @default(now())
+  createdAt  DateTime     @default(now())
+
+  @@index([adminId])
+  @@index([expiresAt])
+
+  @@schema("neo")
+}
+
+model AdminAuditLog {
+  id        String        @id @default(cuid())
+  adminId   String?
+  admin     AdminAccount? @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  action    String
+  entity    String
+  entityId  String?
+  details   String
+  createdAt DateTime      @default(now())
+
+  @@index([createdAt])
+  @@index([entity, entityId])
+
+  @@schema("neo")
+}
+
+model StudentEnrollment {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  semester  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, courseId])
+  @@index([courseId, semester])
+
+  @@schema("neo")
+}
+
+model StudentElective {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjectId String
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, subjectId])
+  @@index([subjectId])
+
+  @@schema("neo")
+}
+
+// Anonymous first-party telemetry. No account IDs, IP addresses, or URL query strings.
+model SitePageView {
+  id            String   @id
+  visitor       String
+  session       String
+  path          String
+  source        String   @default("Direct")
+  device        String   @default("Desktop")
+  browser       String   @default("Other")
+  clientType    String   @default("unknown")
+  createdAt     DateTime @default(now()) @db.Timestamptz(6)
+  lastSeen      DateTime @default(now()) @db.Timestamptz(6)
+  activeSeconds Int      @default(0)
+
+  @@index([createdAt])
+  @@index([lastSeen])
+  @@index([session, createdAt])
+  @@index([path, createdAt])
+  @@index([visitor, createdAt])
+  @@index([clientType, createdAt])
+
+  @@schema("neo")
+}
+
+model SitePWAEvent {
+  id         String   @id
+  visitor    String
+  session    String
+  type       String
+  clientType String
+  path       String
+  device     String
+  browser    String
+  occurredAt DateTime @db.Timestamptz(6)
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([occurredAt])
+  @@index([type, occurredAt])
+
+  @@schema("neo")
+}

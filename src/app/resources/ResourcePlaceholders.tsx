@@ -1,0 +1,15 @@
+import {SignInCard} from '@/components/auth/SignInCard';
+function Placeholder({className=''}:{className?:string}){
+ return <div className={`rounded-md bg-muted ${className}`}/>;
+}
+/** Static placeholders contain no course data, animations, or interactive controls. */
+export function ResourcePlaceholders({locked=false}:{locked?:boolean}){
+ return <div className="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:px-8 lg:py-10">
+  {locked&&<h1 className="sr-only">Resources</h1>}
+  <div className="grid items-stretch gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+   {locked&&<div className="order-0 min-w-0 lg:col-start-1 [&>section]:mb-0"><SignInCard title="Sign in to view resources" description="Sign in to see resources for your selected course and semester or year." href="/login?reason=resources"/></div>}
+   <aside inert aria-hidden="true" className={`order-1 min-w-0 self-start select-none rounded-2xl border border-border bg-card opacity-40 lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1 lg:flex lg:max-h-[calc(100dvh-112px)] lg:min-h-0 lg:flex-col lg:overflow-hidden ${locked?'lg:row-span-2':''}`}><div className="shrink-0 border-b border-border px-5 py-4"><p className="text-sm font-medium">Study preferences</p></div><div className="min-h-0 space-y-5 overflow-y-auto p-5 lg:overscroll-contain [scrollbar-width:thin]">{['University','Course','Semester / year'].map(label=><div key={label}><p className="mb-2 text-xs font-medium">{label}</p><Placeholder className="h-10 w-full rounded-lg"/></div>)}<div className="grid grid-cols-4 gap-2">{Array.from({length:8},(_,i)=><Placeholder key={i} className="h-10 w-full"/>)}</div></div></aside>
+   <div inert aria-hidden="true" className="order-2 min-w-0 select-none space-y-5 opacity-40 lg:col-start-1"><div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card p-5 sm:px-6"><div className="flex min-w-0 items-center gap-3"><Placeholder className="size-12 shrink-0 rounded-xl"/><div className="space-y-2"><Placeholder className="h-3 w-28"/><Placeholder className="h-6 w-40"/></div></div><Placeholder className="h-9 w-32"/></div><Placeholder className="h-10 w-full rounded-xl"/><div className="flex flex-wrap gap-2 border-b border-border pb-4">{Array.from({length:4},(_,i)=><Placeholder key={i} className="h-8 w-20"/>)}</div><div className="grid gap-4 xl:grid-cols-2">{Array.from({length:6},(_,i)=><article key={i} className="rounded-xl border border-border bg-card p-5"><div className="mb-4 flex items-center gap-3"><Placeholder className="size-10 shrink-0 rounded-lg"/><div className="flex-1 space-y-2"><Placeholder className="h-5 w-4/5"/><Placeholder className="h-3 w-24"/></div></div><Placeholder className="h-3 w-full"/><div className="mt-4 grid grid-cols-3 gap-3 rounded-lg bg-muted/30 p-3">{[0,1,2].map(value=><div key={value} className="space-y-2"><Placeholder className="h-3 w-full"/><Placeholder className="h-3 w-2/3"/></div>)}</div><div className="mt-4 flex gap-2 border-t border-border pt-3"><Placeholder className="h-7 flex-1"/><Placeholder className="h-7 flex-1"/><Placeholder className="h-7 flex-1"/></div></article>)}</div></div>
+  </div>
+ </div>;
+}

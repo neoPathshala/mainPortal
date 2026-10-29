@@ -1,0 +1,27 @@
+'use client';
+
+import {UploadedVideoPlayer} from './uploaded-video-player';
+import {YouTubePlayer} from './youtube-player';
+import {videoLocation} from '@/lib/resource-video';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { X, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, RotateCw, ExternalLink } from 'lucide-react';
+const control='rounded-lg p-2 text-inherit transition-colors hover:bg-white/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-40';
+export function QuestionVideo({url,title='Video solution',onEnded,autoPlay=false,poster,onPlaybackChange,cleanEndScreen=false,videoOnly=false}:{url:string;title?:string;onEnded?:()=>void;autoPlay?:boolean;poster?:string;cleanEndScreen?:boolean;videoOnly?:boolean;onPlaybackChange?:(playing:boolean)=>void}) {
+ let parsed:URL;try{parsed=new URL(url,typeof location==='undefined'?'https://neopathshala.com':location.origin);}catch{return null;}
+ if(!['https:','http:','blob:'].includes(parsed.protocol))return null;
+ const playback=videoLocation(url);
+ if(playback?.source==='youtube')return <YouTubePlayer videoOnly={videoOnly} cleanEndScreen={cleanEndScreen} key={url} id={playback.id} list={playback.list} url={url} title={title} autoPlay={autoPlay} poster={poster} onEnded={onEnded} onPlaybackChange={onPlaybackChange}/>;
+ if(playback?.embed)return <div className="overflow-hidden rounded-xl bg-black"><iframe src={playback.embed} referrerPolicy="strict-origin-when-cross-origin" title={title} className="aspect-video w-full border-0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowFullScreen/></div>;
+ const direct=parsed.protocol==='blob:'||!!playback;
+ if(!direct)return null;
+ return <UploadedVideoPlayer videoOnly={videoOnly} key={url} url={url} title={title} poster={poster} autoPlay={autoPlay} onEnded={onEnded} onPlaybackChange={onPlaybackChange}/>;
+}
+
+export function QuestionImages({images}:{images:{url:string;alt?:string}[]}) {
+ const [index,setIndex]=useState<number|null>(null);const [zoom,setZoom]=useState(1);const [rotation,setRotation]=useState(0);const dialog=useRef<HTMLDivElement>(null);const previousFocus=useRef<HTMLElement|null>(null);
+ const move=(next:number)=>{setIndex((next+images.length)%images.length);setZoom(1);setRotation(0);};
+ useEffect(()=>{if(index===null)return;previousFocus.current=document.activeElement as HTMLElement;const overflow=document.body.style.overflow;document.body.style.overflow='hidden';dialog.current?.focus();const key=(event:KeyboardEvent)=>{if(event.key==='Escape')setIndex(null);if(event.key==='ArrowLeft')move(index-1);if(event.key==='ArrowRight')move(index+1);if(event.key==='Tab'){const controls=[...dialog.current!.querySelectorAll<HTMLElement>('button:not(:disabled),a[href]')];const first=controls[0],last=controls.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}}};document.addEventListener('keydown',key);return()=>{document.body.style.overflow=overflow;document.removeEventListener('keydown',key);previousFocus.current?.focus();};},[index,images.length]);
+ if(!images.length)return null;
+ return <div className="space-y-3">{images.map((image,i)=><button type="button" key={`${image.url}-${i}`} onClick={()=>{setZoom(1);setRotation(0);setIndex(i);}} className="block max-w-full cursor-zoom-in rounded-lg text-left" aria-label={`Enlarge ${image.alt||`image ${i+1}`}`}><img src={image.url} alt={image.alt||`Image ${i+1}`} loading="lazy" className="max-h-96 max-w-full rounded-lg object-contain"/></button>)}{index!==null&&createPortal(<div ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Image viewer" className="fixed inset-0 z-[150] flex flex-col bg-black/95 text-white"><header className="flex flex-wrap items-center gap-1 p-3"><span className="mr-auto px-3 text-sm">{index+1} / {images.length}</span><button type="button" className={control} aria-label="Zoom out" disabled={zoom<=0.5} onClick={()=>setZoom(value=>Math.max(.5,value-.25))}><ZoomOut size={18}/></button><span className="w-12 text-center text-xs">{Math.round(zoom*100)}%</span><button type="button" className={control} aria-label="Zoom in" disabled={zoom>=4} onClick={()=>setZoom(value=>Math.min(4,value+.25))}><ZoomIn size={18}/></button><button type="button" className={control} aria-label="Rotate image" onClick={()=>setRotation(value=>value+90)}><RotateCw size={18}/></button><a className={control} href={images[index].url} target="_blank" rel="noopener noreferrer" aria-label="Open original image"><ExternalLink size={18}/></a><button type="button" className={control} aria-label="Close image viewer" onClick={()=>setIndex(null)}><X size={20}/></button></header><div className="relative flex min-h-0 flex-1 items-center justify-center overflow-auto p-8"><img src={images[index].url} alt={images[index].alt||`Image ${index+1}`} className="max-h-full max-w-full object-contain transition-transform" style={{transform:`scale(${zoom}) rotate(${rotation}deg)`}}/></div>{images.length>1&&<footer className="flex justify-center gap-4 p-4"><button type="button" className={control} aria-label="Previous image" onClick={()=>move(index-1)}><ChevronLeft/></button><button type="button" className={control} aria-label="Next image" onClick={()=>move(index+1)}><ChevronRight/></button></footer>}</div>,document.body)}</div>;
+}

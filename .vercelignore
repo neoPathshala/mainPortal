@@ -1,0 +1,11 @@
+node_modules
+.next
+.security
+.env*
+!.env.example
+*.tsbuildinfo
+coverage
+tests
+
+.next-webpack
+.next-validation
