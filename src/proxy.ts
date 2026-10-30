@@ -2,6 +2,7 @@ import {coursesComingSoon,isCourseStudyAPI} from '@/lib/course-availability';
 import {hasEncodedRequestBody} from '@/lib/request-encoding';
 import {configuredCDNOrigins} from '@/lib/cdn-settings';
 import {assetCDNOrigin} from '@/lib/asset-cdn';
+import {publicDirectMediaOrigin,publicMediaOrigin} from '@/lib/pdf-link-origin';
 import { NextRequest, NextResponse } from "next/server";
 
 export function proxy(request: NextRequest) {
@@ -20,10 +21,12 @@ export function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const dev = process.env.NODE_ENV !== "production";
   const staticCDN=assetCDNOrigin(process.env.NEXT_PUBLIC_STATIC_CDN_ORIGIN)||'';
+  const mediaAlias=publicMediaOrigin();
+  const mediaDirect=publicDirectMediaOrigin();
   const csp = [
     "default-src 'self'", `script-src 'self' 'wasm-unsafe-eval' 'nonce-${nonce}' 'strict-dynamic'${dev ? " 'unsafe-eval'" : ""}`,
     `style-src 'self' 'unsafe-inline' ${staticCDN}`, // Motion and theme components need inline styles; scripts require a nonce.
-    "img-src 'self' data: blob: https:" + (dev ? " http://localhost:3000" : ""), `font-src 'self' ${staticCDN}`, `connect-src 'self' ${staticCDN} ${configuredCDNOrigins(process.env.MEDIA_CDN_ORIGIN,process.env.MEDIA_CDN_FALLBACK_ORIGINS).join(' ')} https://admin.neopathshala.com https://*.r2.cloudflarestorage.com` + (dev ? " ws: wss: http://localhost:3000" : ""),
+    "img-src 'self' data: blob: https:" + (dev ? " http://localhost:3000" : ""), `font-src 'self' ${staticCDN}`, `connect-src 'self' ${staticCDN} ${mediaAlias} ${mediaDirect} ${configuredCDNOrigins(process.env.MEDIA_CDN_ORIGIN,process.env.MEDIA_CDN_FALLBACK_ORIGINS).join(' ')} https://admin.neopathshala.com https://*.r2.cloudflarestorage.com` + (dev ? " ws: wss: http://localhost:3000" : ""),
     "frame-src 'self' blob: https://www.youtube.com https://www.youtube-nocookie.com https://drive.google.com https://docs.google.com https://admin.neopathshala.com https://*.r2.cloudflarestorage.com https://portal.tu.edu.np https://iost.tu.edu.np" + (dev ? " http://localhost:3000" : ""),
     "media-src 'self' blob: https:" + (dev ? " http://localhost:3000" : ""), "worker-src 'self' blob:", "object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-ancestors 'none'",
     ...(dev ? [] : ["upgrade-insecure-requests"]),
