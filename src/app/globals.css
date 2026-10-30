@@ -213,31 +213,51 @@ html[data-pwa-bottom-nav="true"] .mobile-search-trigger { bottom: calc(96px + en
 .syllabus-content :is(h1,h2,h3) { font-weight: 650; line-height: 1.5; scroll-margin-top: 6rem; }
 .syllabus-content h1 { font-size: 22px; margin-top: 1.8rem; }
 .syllabus-content h2 { font-size: 18px; margin-top: 1.8rem; }
-.syllabus-content h3 { font-size: 15px; margin-top: 1.3rem; color: var(--primary); }
+.syllabus-content h3 { font-size: 15px; margin-top: 1.3rem; color: hsl(var(--primary)); }
 .syllabus-content > :first-child { margin-top: 0; }
 .syllabus-content :is(ul,ol) { padding-left: 1.5rem; }
 .syllabus-content ul { list-style: disc; }
 .syllabus-content ol { list-style: decimal; }
 .syllabus-content li + li { margin-top: .3rem; }
 .syllabus-content li > p { margin: 0; }
-.syllabus-content a { color: var(--primary); text-decoration: underline; text-underline-offset: 3px; }
+.syllabus-content a { color: hsl(var(--primary)); text-decoration: underline; text-underline-offset: 3px; }
 .syllabus-content a:hover { text-decoration-thickness: 2px; }
 .syllabus-content strong { font-weight: 650; }
-.syllabus-content blockquote { border-left: 2px solid var(--primary); padding-left: 1rem; color: var(--muted-foreground); }
-.syllabus-content code { border-radius: .25rem; padding: .1rem .3rem; background: var(--muted); font-size: .9em; }
-.syllabus-content hr { border-color: var(--border); margin: 1.5rem 0; }
+.syllabus-content blockquote { border-left: 2px solid hsl(var(--primary)); padding-left: 1rem; color: hsl(var(--muted-foreground)); }
+.syllabus-content code { border-radius: .25rem; padding: .1rem .3rem; background: hsl(var(--muted)); font-size: .9em; }
+.syllabus-content hr { border: 0; border-top: 1px solid hsl(var(--border)); margin: 1.5rem 0; }
 .syllabus-content :is(.syllabus-table,.tableWrapper) { max-width: 100%; overflow-x: auto; }
 .syllabus-content table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: inherit; }
 .syllabus-content :is(td,th) { min-width: 6rem; vertical-align: top; padding: .4rem .8rem .4rem 0; text-align: left; border: 0; }
 .syllabus-content :is(td,th):last-child { padding-right: 0; }
-.syllabus-content th { color: var(--muted-foreground); font-size: 12px; font-weight: 500; }
+/* Keep multi-column syllabus tables visually separated in the reading and preview views. */
+.syllabus-content:not(.syllabus-editor) :is(td,th) + :is(td,th) { border-left: 1px solid hsl(var(--border)); padding-left: .9rem; }
+.syllabus-content th { color: hsl(var(--muted-foreground)); font-size: 12px; font-weight: 500; }
 .syllabus-content :is(td,th) > p { margin: 0; }
 .syllabus-content :is(td,th) > * + * { margin-top: .5rem; }
 .syllabus-editor { position: relative; }
 .syllabus-editor :is(td,th) { border: 1px solid var(--border); padding: .5rem .65rem; position: relative; }
 .syllabus-editor .selectedCell::after { content: ''; position: absolute; inset: 0; background: color-mix(in srgb, var(--primary) 10%, transparent); pointer-events: none; }
 .syllabus-editor .ProseMirror-selectednode { outline: 1px solid var(--primary); }
-@media (max-width: 640px) { .syllabus-content { font-size: 13px; } .syllabus-content h2 { font-size: 17px; } .syllabus-content h3 { font-size: 14px; } .syllabus-content table { min-width: 28rem; } }
+@media (max-width: 640px) {
+  .syllabus-content { font-size: 13px; }
+  .syllabus-content h2 { font-size: 17px; }
+  .syllabus-content h3 { font-size: 14px; }
+  /* Fit syllabus tables to the screen instead of forcing a 28rem-wide scroll area. */
+  .syllabus-content table { min-width: 0; font-size: 12px; }
+  .syllabus-content :is(td,th) { min-width: 0; padding: .3rem .45rem .3rem 0; }
+  .syllabus-content:not(.syllabus-editor) :is(td,th) + :is(td,th) { padding-left: .45rem; }
+  /* Description/objectives style pairs read better stacked at full width on phones. */
+  .syllabus-content .syllabus-table-pair table { display: grid; grid-template-columns: minmax(0,1fr); font-size: inherit; }
+  .syllabus-content .syllabus-table-pair :is(tbody,tr) { display: contents; }
+  .syllabus-content .syllabus-table-pair :is(td,th) { display: block; width: 100%; padding: .25rem 0; border: 0; }
+  .syllabus-content .syllabus-table-pair :is(td,th) + :is(td,th) { padding-left: 0; border-left: 0; }
+  .syllabus-content .syllabus-table-pair th:nth-child(1) { order: 1; }
+  .syllabus-content .syllabus-table-pair td:nth-child(1) { order: 2; padding-bottom: 1.25rem; }
+  .syllabus-content .syllabus-table-pair th:nth-child(2) { order: 3; }
+  .syllabus-content .syllabus-table-pair td:nth-child(2) { order: 4; }
+  .syllabus-editor :is(td,th) { padding: .4rem .45rem; }
+}
 
 @keyframes video-playing-wave { 0%,100% { transform:scaleY(.3); } 50% { transform:scaleY(1); } }
 .video-playing-bar { animation: video-playing-wave .8s ease-in-out infinite; transform-origin:center; }

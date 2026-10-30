@@ -12,13 +12,14 @@ const mark=z.discriminatedUnion('type',[
  z.object({type:z.literal('link'),attrs:z.object({href:z.string().refine(safeSyllabusLink,'Use an HTTPS link or an internal page path.')})}).strict(),
 ]);
 const children=()=>z.array(node).max(1000);
-const cellAttrs=z.object({colspan:z.number().int().min(1).max(12).default(1),rowspan:z.number().int().min(1).max(100).default(1),colwidth:z.array(z.number().int().min(1).max(2000)).max(12).nullable().optional(),align:z.enum(['left','center','right','justify']).nullable().optional()}).strict();
+const textAlign=z.enum(['left','center','right','justify']).nullable().optional();
+const cellAttrs=z.object({colspan:z.number().int().min(1).max(12).default(1),rowspan:z.number().int().min(1).max(100).default(1),colwidth:z.array(z.number().int().min(1).max(2000)).max(12).nullable().optional(),align:textAlign}).strict();
 const node:z.ZodType<SyllabusNode>=z.lazy(()=>z.discriminatedUnion('type',[
  z.object({type:z.literal('text'),text:z.string().min(1).max(100000),marks:z.array(mark).max(6).optional()}).strict(),
  z.object({type:z.literal('hardBreak'),marks:z.array(mark).max(6).optional()}).strict(),
  z.object({type:z.literal('horizontalRule')}).strict(),
- z.object({type:z.literal('paragraph'),content:children().optional()}).strict(),
- z.object({type:z.literal('heading'),attrs:z.object({level:z.number().int().min(1).max(3)}).strict(),content:children().optional()}).strict(),
+ z.object({type:z.literal('paragraph'),attrs:z.object({textAlign}).strict().optional(),content:children().optional()}).strict(),
+ z.object({type:z.literal('heading'),attrs:z.object({level:z.number().int().min(1).max(3),textAlign}).strict(),content:children().optional()}).strict(),
  z.object({type:z.literal('bulletList'),content:children().min(1)}).strict(),
  z.object({type:z.literal('orderedList'),attrs:z.object({start:z.number().int().min(1).max(10000),type:z.string().max(10).nullable().optional()}).strict().optional(),content:children().min(1)}).strict(),
  z.object({type:z.literal('listItem'),content:children().min(1)}).strict(),
