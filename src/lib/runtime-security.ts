@@ -11,6 +11,6 @@ export function patchedNodeVersion(version:string){
 const decoderConstants=constants as typeof constants&{BROTLI_DECODER_ERROR_FORMAT_BLOCK_SWITCH?:number};
 export function assertSecureRuntime(version=process.versions.node,hasDecoderFix=typeof decoderConstants.BROTLI_DECODER_ERROR_FORMAT_BLOCK_SWITCH==='number'){
  if(!patchedNodeVersion(version)||!hasDecoderFix){
-  throw Object.assign(new Error(`Node.js ${version} does not meet the platform security baseline for CVE-2026-111497. Install Node.js 24.22.1 LTS or a newer patched 24.x release, then restart this process.`),{code:'INSECURE_NODE_RUNTIME'});
+  throw Object.assign(new Error(`Node.js ${version} does not meet the platform security baseline for CVE-2026-111497. Install Node.js 26.12.1 or a newer patched 26.x release, then restart this process.`),{code:'INSECURE_NODE_RUNTIME'});
  }
 }
